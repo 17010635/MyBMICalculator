@@ -8,71 +8,108 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     EditText etWeight, etHeight;
-    Button btnCalculate, btnReset;
-    TextView tvDate, tvBMI;
+    Button btnCalc, btnReset;
+    TextView tvDate, tvBmi, tvDisplay;
+
+    String datetime;
+    float bmi;
+    String msg;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        etWeight = findViewById(R.id.editTextWeight);
-        etHeight = findViewById(R.id.editTextHeight);
-        btnCalculate = findViewById(R.id.buttonCalculate);
-        btnReset = findViewById(R.id.buttonReset);
-        tvBMI = findViewById(R.id.textViewCalculatedBMI);
-        tvDate = findViewById(R.id.textViewCalculateDate);
 
-        btnCalculate.setOnClickListener(new View.OnClickListener() {
+        etWeight = findViewById(R.id.editTextWeight);
+        etWeight.setSelection(0);
+        etHeight = findViewById(R.id.editTextHeight);
+        btnCalc = findViewById(R.id.buttonCalculate);
+        btnReset = findViewById(R.id.buttonReset);
+        tvDate = findViewById(R.id.textViewDate);
+        tvBmi = findViewById(R.id.textViewBMI);
+        tvDisplay=findViewById(R.id.textViewDisplay);
+
+        btnCalc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 float weight = Float.parseFloat(etWeight.getText().toString());
                 float height = Float.parseFloat(etHeight.getText().toString());
-                float bmi = weight / (height * height) ;
 
-                tvBMI.setText(bmi+"");
+                bmi = weight / (height * height);
+                if(bmi < 18.5) {
+                    msg="You are Underweight";
+                }else if(bmi < 25){
+                    msg="Your BMI is Normal";
+                }else if(bmi < 30) {
+                    msg="You are Overweight";
+                }else {
+                    msg="You are Obese";
+                }
+                bmi = 0;
+                bmi = weight / (height * height);
+                Calendar now = Calendar.getInstance();  //Create a Calendar object with current date and time
+                String datetime = now.get(Calendar.DAY_OF_MONTH) + "/" +
+                        (now.get(Calendar.MONTH) + 1) + "/" +
+                        now.get(Calendar.YEAR) + " " +
+                        now.get(Calendar.HOUR_OF_DAY) + ":" +
+                        now.get(Calendar.MINUTE);
+                tvDate.setText(datetime);
+                tvBmi.setText(String.format("%.3f",bmi));
+                tvDisplay.setText(msg);
+                etHeight.setText("");
+                etWeight.setText("");
+
+            }
+
+        });
+
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tvDate.setText("");
+                tvBmi.setText("");
+                bmi = 0;
+                tvDisplay.setText("");
+                etWeight.setText("");
+                etHeight.setText("");
+
             }
         });
+
     }
+
     @Override
     protected void onPause() {
         super.onPause();
-        Calendar now = Calendar.getInstance();  //Create a Calendar object with current date and time
-        String datetime = now.get(Calendar.DAY_OF_MONTH) + "/" +
-                (now.get(Calendar.MONTH)+1) + "/" +
-                now.get(Calendar.YEAR) + " " +
-                now.get(Calendar.HOUR_OF_DAY) + ":" +
-                now.get(Calendar.MINUTE);
-
-        // Step 1a: Obtain an instance of the SharedPreferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        // Step 1b: Obtain an instance of the SharedPreference Editor for update later
         SharedPreferences.Editor prefEdit = prefs.edit();
-        // Step 1c: Add the key-value pair
-        prefEdit.putString("date",datetime);
-        // Step 1d: Call ocmmit() method to save the changes into the SharedPreferences
+
+        prefEdit.putString("datetime",datetime);
+        prefEdit.putFloat("bmi", bmi);
+        prefEdit.putString("msg", msg);
         prefEdit.commit();
 
-        //abcde
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        //String msg = "No greetings";
-
-        // Step 2a: Obtain an instance of the SharedPreferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        // Step 2b: Retrieve the saved data with the key "greeting" from the SharedPreferences object
-        String msg = prefs.getString("greeting", "No greetings!");
+        String date = prefs.getString("datetime", "");
+        Float bmiResult = prefs.getFloat("bmi",0);
+        String displayResult = prefs.getString("msg","");
+        tvDate.setText(date);
+        tvBmi.setText(Float.toString(bmiResult));
+        tvDisplay.setText(displayResult);
 
-        Toast toast = Toast.makeText(getApplicationContext(),msg ,Toast.LENGTH_LONG );
-        toast.show();
     }
 
 }
